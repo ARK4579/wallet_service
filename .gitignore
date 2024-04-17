@@ -4,6 +4,6 @@ __pycache__/
 electrum/
 secp256k1/
 venv/
-wallet_service_db
 Electrum-**
 config.ini
+wallet_service_db
