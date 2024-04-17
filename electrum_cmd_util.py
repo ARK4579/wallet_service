@@ -12,6 +12,7 @@ from db_manager import DbManager
 
 CONFIG_FILE = 'config.ini'
 
+
 class ElectrumCmdUtil():
   '''Utility class for Electrum commands and helper methods'''
 
@@ -25,7 +26,7 @@ class ElectrumCmdUtil():
       electrum.constants.set_testnet()
     conf = {'fee_level': int(self.config['SYSTEM']['fee_level']), 'auto_connect': True}
     self.conf = electrum.SimpleConfig(conf)
-    self.cmd = electrum.Commands(config = self.conf)
+    self.cmd = electrum.Commands(config=self.conf)
     self.wallet = None
     self.wallet_password = None
 
@@ -66,35 +67,34 @@ class ElectrumCmdUtil():
     if self.conf.fee_per_kb():
       logging.info("Currently used fee %i sat/kb", self.conf.fee_per_kb())
 
-
   def set_logging(self):
     level = logging.INFO
     logging.config.dictConfig({
-      'version': 1,
-      'disable_existing_loggers': False,
-      'formatters': {
-          'standard': {
-              'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-          },
-      },
-      'handlers': { 
-          'default': {
-              'level': level,
-              'class': 'logging.handlers.RotatingFileHandler',
-              'formatter': 'standard',
-              'filename': 'debug.log',
-              'maxBytes': 4194304,
-              'backupCount': 10, 
-           },
-      },
-      'loggers': {
-              '': {
-                  'handlers': ['default'],        
-                  'level': level,
-                  'propagate': True  
-              }
-          }
-      })
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            },
+        },
+        'handlers': {
+            'default': {
+                'level': level,
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'standard',
+                'filename': 'debug.log',
+                'maxBytes': 4194304,
+                'backupCount': 10,
+            },
+        },
+        'loggers': {
+            '': {
+                'handlers': ['default'],
+                'level': level,
+                'propagate': True
+            }
+        }
+    })
 
   def get_balance(self, wallet):
     try:
@@ -123,7 +123,7 @@ class ElectrumCmdUtil():
 
   def get_seed(self, wallet, wallet_password):
     self.cmd.wallet = wallet
-    seed = self.cmd.getseed(password = wallet_password)
+    seed = self.cmd.getseed(password=wallet_password)
     return seed
 
   def _get_wallet_path(self, wallet_id):
@@ -134,7 +134,7 @@ class ElectrumCmdUtil():
 
   def create_wallet(self, wallet_id, wallet_password):
     wallet_path = self._get_wallet_path(wallet_id)
-    conf = electrum.SimpleConfig({'wallet_path':wallet_path})
+    conf = electrum.SimpleConfig({'wallet_path': wallet_path})
     wallet = electrum.wallet.create_new_wallet(path=wallet_path, config=conf, password=wallet_password)['wallet']
     wallet.synchronize()
     wallet.change_gap_limit(200)
@@ -162,7 +162,7 @@ class ElectrumCmdUtil():
     self.stopping_fut.set_result('done')
     self.stopping_fut.cancel()
 
-  def wait_for_wallet_sync(self, wallet, stop_on_complete = False):
+  def wait_for_wallet_sync(self, wallet, stop_on_complete=False):
     self.get_event_loop()
     self.connect_to_network()
     wallet.start_network(self.network)
@@ -171,10 +171,10 @@ class ElectrumCmdUtil():
     if stop_on_complete:
       self.stop_network()
 
-  def get_tx_size(self, destination = None, amount = None, outputs = None):
+  def get_tx_size(self, destination=None, amount=None, outputs=None):
     try:
       # Fee here does not matter, but we have to provide it if not dynamic fee is available at the moment
-      tx = self.create_tx(destination = destination, amount = amount, outputs = outputs, fee = 0.00000001)
+      tx = self.create_tx(destination=destination, amount=amount, outputs=outputs, fee=0.00000001)
       tx = electrum.Transaction(tx)
       tx_size = tx.estimated_size()
       self.wallet.remove_transaction(tx.txid())
@@ -182,7 +182,7 @@ class ElectrumCmdUtil():
     except Exception as e:
       raise Exception("Failed to estimate tx size for wallet: {} {}".format(self.wallet, e))
 
-  def create_tx(self, destination = None, amount = None, outputs = None, fee = None):
+  def create_tx(self, destination=None, amount=None, outputs=None, fee=None):
     try:
       final_outputs = []
       if destination and amount:
@@ -192,17 +192,16 @@ class ElectrumCmdUtil():
         for address, amount in outputs:
           amount_sat = electrum.commands.satoshis_or_max(amount)
           final_outputs.append(electrum.transaction.PartialTxOutput.from_address_and_value(address, amount_sat))
-      tx = self.wallet.create_transaction(
-          final_outputs,
-          fee=electrum.commands.satoshis(fee),
-          feerate=None,
-          change_addr=None,
-          domain_addr=None,
-          domain_coins=None,
-          unsigned=False,
-          rbf=True,
-          password=self.wallet_password,
-          locktime=None)
+      tx = self.wallet.create_transaction(final_outputs,
+                                          fee=electrum.commands.satoshis(fee),
+                                          feerate=None,
+                                          change_addr=None,
+                                          domain_addr=None,
+                                          domain_coins=None,
+                                          unsigned=False,
+                                          rbf=True,
+                                          password=self.wallet_password,
+                                          locktime=None)
       result = tx.serialize()
       return result
     except Exception as e:
@@ -210,12 +209,12 @@ class ElectrumCmdUtil():
 
   def send_to(self, destination, amount):
     logging.info("Trying to send full balance of %s", self.wallet)
-    tx = self.create_tx(destination = destination, amount = amount)
+    tx = self.create_tx(destination=destination, amount=amount)
     self.get_event_loop()
     self.connect_to_network()
     while not self.network.is_connected():
       print('Connecting...')
-      time.sleep(1)      
+      time.sleep(1)
     self.broadcast(tx, amount)
     self.stop_network()
 
@@ -244,9 +243,10 @@ class ElectrumCmdUtil():
       self.wallet.remove_transaction(tx.txid())
       raise Exception("Failed to broadcast wallet: {} tx: {} {}".format(self.wallet, tx.txid(), e))
 
+
 class APICmdUtil:
 
-  def __init__(self, cmd_manager, wallet_id = None, wallet_password = None):
+  def __init__(self, cmd_manager, wallet_id=None, wallet_password=None):
     self.cmd_manager = cmd_manager
     self.wallets = {}
     if wallet_id != None:
@@ -259,7 +259,7 @@ class APICmdUtil:
     this_tx_fee = tx_proportion * total_fee
     return this_tx_fee
 
-  async def _get_details_of_unsent(self, addr = None, btc_amount = None, set_password = False):
+  async def _get_details_of_unsent(self, addr=None, btc_amount=None, set_password=False):
     if addr:
       total_amount = int(btc_amount * 1.0e8)
       outputs = [[addr, btc_amount]]
@@ -281,8 +281,8 @@ class APICmdUtil:
       total_amount += tx.amount
       outputs.append([tx.address, tx.amount / 1.0e8])
 
-    total_size = self.cmd_manager.get_tx_size(outputs = outputs)
-    total_fee = self.cmd_manager.conf.estimate_fee(total_size, allow_fallback_to_static_rates = True) / 1.0e8
+    total_size = self.cmd_manager.get_tx_size(outputs=outputs)
+    total_fee = self.cmd_manager.conf.estimate_fee(total_size, allow_fallback_to_static_rates=True) / 1.0e8
 
     return total_amount, total_size, total_fee
 
@@ -296,12 +296,14 @@ class APICmdUtil:
   async def send(self, addr, btc_amount):
     '''Schedules send of a transaction. 
       Fee level estimates for one transaction is calculated as one tx / total = percent of fee
-      Continue to batch incoming sends until (tx_fee)/(total amount being sent) is less than percent threshold. Default 5%
+      Continue to batch incoming sends until (tx_fee)/(total amount being sent) is less than percent threshold.
+      Default 5%
     '''
     this_tx_fee = await self._get_tx_weighted_fee(addr, btc_amount)
 
     with DbManager() as db_manager:
-      obj = db_manager.insert_transaction(addr, int(btc_amount * 1.0e8), self.wallet_id, self.cmd_manager.wallet_password)
+      obj = db_manager.insert_transaction(addr, int(btc_amount * 1.0e8), self.wallet_id,
+                                          self.cmd_manager.wallet_password)
       sr_id = obj.sr_id
 
     return this_tx_fee, sr_id
@@ -331,23 +333,24 @@ class APICmdUtil:
       if self.wallet_id not in self.wallets:
         self.wallets[self.wallet_id] = {}
         self.wallets[self.wallet_id]['threshold_multiplier'] = 1
-        self.wallets[self.wallet_id]['last_batch_send_try']  = current_time
-      
-      if current_time - self.wallets[self.wallet_id]['last_batch_send_try'] > int(self.cmd_manager.config['USER']['send_frequency']) * 60:
+        self.wallets[self.wallet_id]['last_batch_send_try'] = current_time
+
+      if current_time - self.wallets[self.wallet_id]['last_batch_send_try'] > int(
+          self.cmd_manager.config['USER']['send_frequency']) * 60:
         #Only attempt sends at send frequency else exit
         self.wallets[self.wallet_id]['last_batch_send_try'] = current_time
       else:
         continue
 
-      total_amount, total_size, total_fee = await self._get_details_of_unsent(set_password = True)
+      total_amount, total_size, total_fee = await self._get_details_of_unsent(set_password=True)
       if not total_amount:
-        self.wallets[self.wallet_id]['last_batch_send_try']  = current_time
+        self.wallets[self.wallet_id]['last_batch_send_try'] = current_time
         continue
 
       fa_ratio = int(total_fee * 1.0e8) / total_amount
-      self.wallets[self.wallet_id]['fa_ratio']  = fa_ratio
-      self.wallets[self.wallet_id]['fa_ratio_limit'] = (int(self.cmd_manager.config['USER']['fa_ratio_min']) / 100) * self.wallets[self.wallet_id]['threshold_multiplier']
-
+      self.wallets[self.wallet_id]['fa_ratio'] = fa_ratio
+      self.wallets[self.wallet_id]['fa_ratio_limit'] = (int(self.cmd_manager.config['USER']['fa_ratio_min']) /
+                                                        100) * self.wallets[self.wallet_id]['threshold_multiplier']
 
       if self.wallets[self.wallet_id]['fa_ratio_limit'] >= self.wallets[self.wallet_id]['fa_ratio']:
         with DbManager() as db_manager:
@@ -355,7 +358,7 @@ class APICmdUtil:
           outputs = []
           for tx in unsent:
             outputs.append([tx.address, tx.amount / 1.0e8])
-          serialized_tx = self.cmd_manager.create_tx(outputs = outputs, fee = total_fee)
+          serialized_tx = self.cmd_manager.create_tx(outputs=outputs, fee=total_fee)
           tx = electrum.Transaction(serialized_tx)
           self.cmd_manager.wallet.add_transaction(tx)
           self.cmd_manager.wallet.save_db()
@@ -368,8 +371,10 @@ class APICmdUtil:
             self.cmd_manager.wallet.save_db()
             raise e
       else:
-        if self.wallets[self.wallet_id]['fa_ratio_limit'] * 2 <= int(self.cmd_manager.config['USER']['fa_ratio_max']) / 100:
-          self.wallets[self.wallet_id]['threshold_multiplier'] *= 2 if self.wallets[self.wallet_id]['threshold_multiplier'] != 1 else 2
+        if self.wallets[self.wallet_id]['fa_ratio_limit'] * 2 <= int(
+            self.cmd_manager.config['USER']['fa_ratio_max']) / 100:
+          self.wallets[self.wallet_id]['threshold_multiplier'] *= 2 if self.wallets[
+              self.wallet_id]['threshold_multiplier'] != 1 else 2
 
     logging.info('{}'.format(self.wallets))
 
@@ -380,11 +385,16 @@ class APICmdUtil:
     if not obj:
       return {}
     if obj.txid:
-      result = {'txid': obj.txid, 'sr_timestamp': obj.sr_timestamp, 'tx_timestamp': obj.tx_timestamp,
-     'addr': obj.address, 'amount': '{:.8f}'.format(obj.amount / 1.0e8), 'tx_fee': '{:.8f}'.format(obj.fee / 1.0e8)}
+      result = {
+          'txid': obj.txid,
+          'sr_timestamp': obj.sr_timestamp,
+          'tx_timestamp': obj.tx_timestamp,
+          'addr': obj.address,
+          'amount': '{:.8f}'.format(obj.amount / 1.0e8),
+          'tx_fee': '{:.8f}'.format(obj.fee / 1.0e8)
+      }
     else:
-      result = {'sr_timestamp': obj.sr_timestamp,
-     'addr': obj.address, 'amount': '{:.8f}'.format(obj.amount / 1.0e8)}
+      result = {'sr_timestamp': obj.sr_timestamp, 'addr': obj.address, 'amount': '{:.8f}'.format(obj.amount / 1.0e8)}
 
     return result
 
@@ -394,11 +404,7 @@ class APICmdUtil:
       objs = db_manager.get_sent_txs(limit)
     txs = []
     for tx in objs:
-      txs.append({
-        'tx_timestamp': tx.tx_timestamp,
-        'sr_id': tx.sr_id,
-        'tx_id': tx.txid
-        })
+      txs.append({'tx_timestamp': tx.tx_timestamp, 'sr_id': tx.sr_id, 'tx_id': tx.txid})
     return txs
 
   @classmethod
@@ -425,21 +431,23 @@ class APICmdUtil:
         total_amount += tx.amount
         outputs.append([tx.address, tx.amount / 1.0e8])
 
-      total_size = cmd_util.cmd_manager.get_tx_size(outputs = outputs)
-      total_fee = cmd_util.cmd_manager.conf.estimate_fee(total_size, allow_fallback_to_static_rates = True) / 1.0e8
+      total_size = cmd_util.cmd_manager.get_tx_size(outputs=outputs)
+      total_fee = cmd_util.cmd_manager.conf.estimate_fee(total_size, allow_fallback_to_static_rates=True) / 1.0e8
       fa_ratio = int(total_fee * 1.0e8) / total_amount
 
-      next_attempt = int(cmd_util.cmd_manager.config['USER']['send_frequency']) * 60 - (int(time.time()) - cmd_util.wallets[cmd_util.wallet_id].get('last_batch_send_try'))
+      next_attempt = int(cmd_util.cmd_manager.config['USER']['send_frequency']) * 60 - (
+          int(time.time()) - cmd_util.wallets[cmd_util.wallet_id].get('last_batch_send_try'))
       next_attempt = next_attempt if next_attempt >= 0 else 0
-      fa_ratio_limit = (int(cmd_util.cmd_manager.config['USER']['fa_ratio_min']) / 100) * cmd_util.wallets[cmd_util.wallet_id]['threshold_multiplier']
+      fa_ratio_limit = (int(cmd_util.cmd_manager.config['USER']['fa_ratio_min']) /
+                        100) * cmd_util.wallets[cmd_util.wallet_id]['threshold_multiplier']
 
       queue[cmd_util.wallet_id] = {
-        'sr_ids': txs,
-        'amount': '{:.8f}'.format(total_amount / 1.0e8),
-        'fee': '{:.8f}'.format(total_fee),
-        'fa_ratio': fa_ratio,
-        'fa_ratio_limit': fa_ratio_limit,
-        'next_send_attempt_in': next_attempt
+          'sr_ids': txs,
+          'amount': '{:.8f}'.format(total_amount / 1.0e8),
+          'fee': '{:.8f}'.format(total_fee),
+          'fa_ratio': fa_ratio,
+          'fa_ratio_limit': fa_ratio_limit,
+          'next_send_attempt_in': next_attempt
       }
 
     return queue
