@@ -30,7 +30,7 @@
         "config.ini": true,
         "config.ini.sample": true,
         "wallet_service_supervisor.conf": true,
-        "debug.log": true,
+        "debug.log*": true,
         "wallet_service_db": true,
     }
 }
