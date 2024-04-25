@@ -1,4 +1,7 @@
+import json
+
 MIN_BTC_AMOUNT = 0.00000001
+
 
 def check_params(data, params):
   sanitize_params(data)
@@ -20,9 +23,10 @@ def check_params(data, params):
       except Exception:
         raise Exception('wallet id must be a positive int')
 
+
 def sanitize_params(input_dict):
   '''Sanitize params of a dict for DB safety
   Not primitive types are converted to string'''
-  for key,value in input_dict.items():
+  for key, value in input_dict.items():
     if type(value) not in [int, float, bool, str, bytes]:
-      input_dict[key]=json.dumps(value)
+      input_dict[key] = json.dumps(value)

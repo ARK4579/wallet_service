@@ -7,6 +7,7 @@ import time
 import uuid
 import cryptocode
 
+
 class DbManager:
 
   def __init__(self, echo_mode=False):
@@ -14,33 +15,31 @@ class DbManager:
     engine = create_engine('sqlite:///wallet_service_db', echo=echo_mode)
     Base.metadata.bind = engine
     self.session = sessionmaker(bind=engine)()
- 
+
   def __del__(self):
     self.session.close()
-  
+
   def __exit__(self, *err):
     pass
-  
+
   def __enter__(self):
     return self
 
   def close_session(self):
-    self.session.close()    
+    self.session.close()
 
   def insert_transaction(self, address, amount, wallet_id, wallet_password):
     # Only sent transactions have txid and fee
     sr_id = str(uuid.uuid4().hex)
-    obj = Transactions(
-        sr_id = sr_id,
-        txid = None,
-        address = address,
-        amount = amount,
-        wallet_id = wallet_id,
-        fee = None,
-        sr_timestamp = int(time.time()),
-        tx_timestamp = None,
-        wallet_password = cryptocode.encrypt(wallet_password, sr_id)
-      )
+    obj = Transactions(sr_id=sr_id,
+                       txid=None,
+                       address=address,
+                       amount=amount,
+                       wallet_id=wallet_id,
+                       fee=None,
+                       sr_timestamp=int(time.time()),
+                       tx_timestamp=None,
+                       wallet_password=cryptocode.encrypt(wallet_password, sr_id))
     self.session.add(obj)
     self.session.commit()
     return obj

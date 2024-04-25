@@ -10,6 +10,7 @@ app = Sanic("BlockonomicsWalletServiceAPI")
 cmd_manager = ElectrumCmdUtil()
 cmd_util = APICmdUtil(cmd_manager)
 
+
 @app.post("/api/presend")
 async def presend(request):
   try:
@@ -30,7 +31,8 @@ async def presend(request):
     estimated_fee = await post_cmd_util.presend(addr, btc_amount)
     return json({"estimated_fee": '{:.8f}'.format(estimated_fee)})
   except Exception as e:
-    return json({"error": '{}'.format(e)}, status = 500)
+    return json({"error": '{}'.format(e)}, status=500)
+
 
 @app.post("/api/send")
 async def send(request):
@@ -48,11 +50,12 @@ async def send(request):
       raise Exception('Incorrect API password')
 
     post_cmd_util = APICmdUtil(cmd_manager, wallet_id, wallet_password)
-  
+
     estimated_fee, sr_id = await post_cmd_util.send(addr, btc_amount)
     return json({"estimated_fee": '{:.8f}'.format(estimated_fee), "sr_id": sr_id})
   except Exception as e:
-    return json({"error": '{}'.format(e)}, status = 500)
+    return json({"error": '{}'.format(e)}, status=500)
+
 
 @app.post("/api/get_balance")
 async def get_balance(request):
@@ -68,11 +71,12 @@ async def get_balance(request):
       raise Exception('Incorrect API password')
 
     balance_cmd_util = APICmdUtil(cmd_manager, wallet_id, wallet_password)
-  
+
     confirmed, unconfirmed = await balance_cmd_util.get_balance()
     return json({"confirmed": confirmed, "unconfirmed": unconfirmed})
   except Exception as e:
-    return json({"error": '{}'.format(e)}, status = 500)
+    return json({"error": '{}'.format(e)}, status=500)
+
 
 @app.get("/api/detail/<sr_id>")
 async def detail(request, sr_id):
@@ -82,7 +86,8 @@ async def detail(request, sr_id):
     data = await APICmdUtil.get_tx(sr_id)
     return json(data)
   except Exception as e:
-    return json({"error": '{}'.format(e)}, status = 500)
+    return json({"error": '{}'.format(e)}, status=500)
+
 
 @app.get("/api/history")
 async def history(request):
@@ -91,7 +96,8 @@ async def history(request):
     data = await APICmdUtil.get_send_history(limit)
     return json(data)
   except Exception as e:
-    return json({"error": '{}'.format(e)}, status = 500)
+    return json({"error": '{}'.format(e)}, status=500)
+
 
 @app.get("/api/queue")
 async def queue(request):
@@ -99,7 +105,8 @@ async def queue(request):
     data = await APICmdUtil.get_queue(cmd_util)
     return json(data)
   except Exception as e:
-    return json({"error": '{}'.format(e)}, status = 500)
+    return json({"error": '{}'.format(e)}, status=500)
+
 
 @app.listener("after_server_start")
 async def server_start_listener(app, loop):
@@ -108,6 +115,7 @@ async def server_start_listener(app, loop):
   asyncio.ensure_future(main_loop())
   cmd_manager.get_event_loop()
   cmd_manager.connect_to_network()
+
 
 async def main_loop():
   last_batch_send_try = int(time.time())
@@ -121,6 +129,7 @@ async def main_loop():
     except Exception as e:
       logging.error("%s", e)
     await asyncio.sleep(10)
+
 
 if __name__ == "__main__":
   app.run(host="0.0.0.0", port=8000, debug=True)
