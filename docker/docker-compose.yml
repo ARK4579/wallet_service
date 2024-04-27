@@ -1,0 +1,45 @@
+version: "3"
+services:
+  # run wallet service connecting to electrumx regtest server
+  app:
+    container_name: wallet_service
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    volumes:
+      - ./data/wallet_service/wallets:/app/wallets
+    ports:
+      - "8000:8000"
+    environment:
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+      - REGTEST_SERVER=host.docker.internal
+    depends_on:
+      - electrumx
+    command: "python wallet_service_api.py"
+  # run docker bitcoin node on regtest net 
+  bitcoind:
+    container_name: bitcoind
+    user: 1000:1000
+    image: lncm/bitcoind:v27.0
+    ports:
+      - "18443:18443"
+    volumes:
+      - ./bitcoin.conf:/data/.bitcoin/bitcoin.conf
+      - ./data/bitcoind:/data/.bitcoin
+    restart: on-failure
+    stop_grace_period: 15m30s
+  # run electrumx server on regtest net
+  electrumx:
+    container_name: electrumx
+    image: lukechilds/electrumx
+    ports:
+      - "51002:50002"
+      - "51001:50001"
+    volumes:
+      - ./data/electrumx:/data
+    depends_on:
+      - bitcoind
+    environment:
+      - DAEMON_URL=http://myuser:SomeDecentp4ssw0rd@bitcoind:18443
+      - COIN=BitcoinSegwit
+      - NET=regtest
