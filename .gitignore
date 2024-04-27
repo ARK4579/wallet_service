@@ -1,3 +1,4 @@
+docker/data/**
 wallets/wallet_*
 debug.log*
 __pycache__/
