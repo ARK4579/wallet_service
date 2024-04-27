@@ -316,6 +316,20 @@ class APICmdUtil:
 
     return this_tx_fee, sr_id
 
+  async def cancel(self, sr_id):
+    ''' Removes a transaction from schedule. 
+        Given sr_id, removes transaction DB and returns canceled status
+    '''
+    canceled = False
+
+    with DbManager() as db_manager:
+      obj = db_manager.cancel_transaction(sr_id)
+
+      # if obj is None, transaction was not found and hence was canceled
+      canceled = False if obj else True
+
+    return canceled
+
   async def get_balance(self):
     ''' Get wallet balance
         Syncs wallet to network and returns both confirmed and unconfirmed amounts
