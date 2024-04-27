@@ -1,13 +1,14 @@
 version: "3"
 services:
   # run wallet service connecting to electrumx regtest server
-  app:
+  wallet_service:
     container_name: wallet_service
     build:
       context: ../
       dockerfile: ./docker/Dockerfile
     volumes:
       - ./data/wallet_service/wallets:/app/wallets
+      - ./data/wallet_service/sqlite.db:/app/wallet_service_db
     ports:
       - "8000:8000"
     environment:

@@ -44,6 +44,14 @@ class DbManager:
     self.session.commit()
     return obj
 
+  def cancel_transaction(self, sr_id):
+    tx = self.get_tx(sr_id)
+    if tx:
+      self.session.delete(tx)
+      self.session.commit()
+    # if deleted, then it returns empty dict
+    return self.get_tx(sr_id)
+
   def get_unsent(self, wallet_id):
     return self.session.query(Transactions).filter(Transactions.txid == None, Transactions.wallet_id == wallet_id).all()
 

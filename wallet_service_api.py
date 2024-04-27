@@ -57,6 +57,26 @@ async def send(request):
     return json({"error": '{}'.format(e)}, status=500)
 
 
+@app.post("/api/cancel")
+async def cancel(request):
+  try:
+    args = request.json
+    utils.check_params(args, ['sr_id', 'api_password'])
+
+    sr_id = args.get('sr_id')
+    api_password = args.get('api_password')
+
+    if api_password != cmd_manager.config['USER']['api_password']:
+      raise Exception('Incorrect API password')
+
+    post_cmd_util = APICmdUtil(cmd_manager)
+
+    canceled = await post_cmd_util.cancel(sr_id)
+    return json({"canceled": canceled})
+  except Exception as e:
+    return json({"error": '{}'.format(e)}, status=500)
+
+
 @app.post("/api/get_balance")
 async def get_balance(request):
   try:
