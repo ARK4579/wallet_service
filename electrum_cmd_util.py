@@ -24,6 +24,14 @@ class ElectrumCmdUtil():
     self.network = None
     if self.config['SYSTEM']['use_testnet'] == 'True':
       electrum.constants.set_testnet()
+    if self.config['SYSTEM']['use_regtest'] == 'True':
+      electrum.constants.set_regtest()
+      # default server add in regtest in electrum is 127.0.0.1
+      # this allows us to replace 127.0.0.1 with REGTEST_SERVER
+      regtest_server = os.environ.get('REGTEST_SERVER')
+      if regtest_server is not None:
+        server = electrum.constants.net.DEFAULT_SERVERS.pop('127.0.0.1')
+        electrum.constants.net.DEFAULT_SERVERS[regtest_server] = server
     conf = {'fee_level': int(self.config['SYSTEM']['fee_level']), 'auto_connect': True}
     self.conf = electrum.SimpleConfig(conf)
     self.cmd = electrum.Commands(config=self.conf)

@@ -1,6 +1,7 @@
 [SYSTEM]
 wallet_dir = wallets
 use_testnet = True
+use_regtest = False
 fee_level = 1
 
 [USER]
